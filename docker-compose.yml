@@ -1,0 +1,87 @@
+services:
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  auth-service:
+    build:
+      context: ./services/auth
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=myuser
+      - DB_PASSWORD=mypassword
+      - DB_NAME=mydatabase
+      - JWT_SECRET=your-secret-key
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
+
+  department-service:
+    build:
+      context: ./services/department
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=myuser
+      - DB_PASSWORD=mypassword
+      - DB_NAME=mydatabase
+    ports:
+      - "8082:8080"
+    depends_on:
+      - postgres
+
+  doctor-service:
+    build:
+      context: ./services/doctor
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=myuser
+      - DB_PASSWORD=mypassword
+      - DB_NAME=mydatabase
+    ports:
+      - "8083:8080"
+    depends_on:
+      - postgres
+
+  appointment-service:
+    build:
+      context: ./services/appointment
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=myuser
+      - DB_PASSWORD=mypassword
+      - DB_NAME=mydatabase
+    ports:
+      - "8084:8080"
+    depends_on:
+      - postgres
+
+  gateway:
+    build:
+      context: ./services/gateway
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:8080
+      - DEPARTMENT_SERVICE_URL=http://department-service:8080
+      - DOCTOR_SERVICE_URL=http://doctor-service:8080
+      - APPOINTMENT_SERVICE_URL=http://appointment-service:8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - department-service
+      - doctor-service
+      - appointment-service
+
+volumes:
+  postgres_data: 
